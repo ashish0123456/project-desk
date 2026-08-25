@@ -1,11 +1,5 @@
-CREATE TABLE IF NOT EXISTS users (
-    id TEXT PRIMARY KEY,
-    email TEXT NOT NULL UNIQUE,
-    password_hash TEXT NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
-);
 CREATE TABLE users (
-    id         BIGSERIAL PRIMARY KEY,
+    id         TEXT PRIMARY KEY,
     name       VARCHAR(100) NOT NULL,
     email      VARCHAR(255) NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,

@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package issue.v1;
+
+option go_package = "gitlab.com/Ash3941/project-management/gen/proto/issue/v1;issuev1";
+
+service IssueService {
+  rpc CreateIssue(CreateIssueRequest) returns (CreateIssueResponse);
+}
+
+message CreateIssueRequest {
+  string project_id = 1;
+  string title = 2;
+  string body = 3;
+}
+
+message CreateIssueResponse {
+  string id = 1;
+  string project_id = 2;
+  string title = 3;
+  string body = 4;
+  string status = 5;
+  string priority = 6;
+  string assignee = 7;
+  string created_at = 8;
+}

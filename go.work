@@ -1,0 +1,11 @@
+go 1.25.0
+
+use (
+	./gen
+	./pkg
+	./services/api-gateway
+	./services/auth-service
+	./services/project-service
+	./services/issue-service
+	./services/worker-service
+)

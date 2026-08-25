@@ -1,0 +1,8 @@
+version: v1
+name: gitlab.com/Ash3941/project-management
+breaking:
+  use:
+    - FILE
+lint:
+  use:
+    - DEFAULT

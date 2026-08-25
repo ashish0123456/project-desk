@@ -1,0 +1,139 @@
+services:
+  postgres-auth:
+    image: postgres:17
+    container_name: pm-postgres-auth
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: pm_auth
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_auth_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d pm_auth"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  postgres-project:
+    image: postgres:17
+    container_name: pm-postgres-project
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: pm_project
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_project_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d pm_project"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  postgres-issue:
+    image: postgres:17
+    container_name: pm-postgres-issue
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: pm_issue
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_issue_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d pm_issue"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:8
+    container_name: pm-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api-gateway:
+    build:
+      context: ../..
+      dockerfile: services/api-gateway/Dockerfile
+    container_name: pm-api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres-auth
+      - postgres-project
+      - postgres-issue
+    environment:
+      - APP_ENV=development
+
+  auth-service:
+    build:
+      context: ../..
+      dockerfile: services/auth-service/Dockerfile
+    container_name: pm-auth-service
+    ports:
+      - "8081:8081"
+    depends_on:
+      - postgres-auth
+    environment:
+      - AUTH_DB_HOST=postgres-auth
+      - AUTH_DB_PORT=5432
+      - AUTH_DB_USER=postgres
+      - AUTH_DB_PASSWORD=postgres
+      - AUTH_DB_NAME=pm_auth
+
+  project-service:
+    build:
+      context: ../..
+      dockerfile: services/project-service/Dockerfile
+    container_name: pm-project-service
+    ports:
+      - "8082:8082"
+    depends_on:
+      - postgres-project
+    environment:
+      - PROJECT_DB_HOST=postgres-project
+      - PROJECT_DB_PORT=5432
+      - PROJECT_DB_USER=postgres
+      - PROJECT_DB_PASSWORD=postgres
+      - PROJECT_DB_NAME=pm_project
+
+  issue-service:
+    build:
+      context: ../..
+      dockerfile: services/issue-service/Dockerfile
+    container_name: pm-issue-service
+    ports:
+      - "8083:8083"
+    depends_on:
+      - postgres-issue
+    environment:
+      - ISSUE_DB_HOST=postgres-issue
+      - ISSUE_DB_PORT=5432
+      - ISSUE_DB_USER=postgres
+      - ISSUE_DB_PASSWORD=postgres
+      - ISSUE_DB_NAME=pm_issue
+
+  worker-service:
+    build:
+      context: ../..
+      dockerfile: services/worker-service/Dockerfile
+    container_name: pm-worker-service
+    depends_on:
+      - redis
+    environment:
+      - REDIS_ADDR=redis:6379
+
+volumes:
+  postgres_auth_data:
+  postgres_project_data:
+  postgres_issue_data:

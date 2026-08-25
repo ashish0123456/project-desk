@@ -2,6 +2,7 @@
 
 /bin
 /tmp
+/gen
 
 coverage.out
 
@@ -9,5 +10,5 @@ coverage.out
 
 .idea
 .vscode
-
+ARCHITECTURE.md
 .DS_Store

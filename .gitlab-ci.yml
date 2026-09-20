@@ -15,16 +15,7 @@ variables:
   GOTOOLCHAIN: local
 
 cache:
-  key:
-    files:
-      - go.work.sum
-      - gen/go.sum
-      - pkg/go.sum
-      - services/api-gateway/go.sum
-      - services/auth-service/go.sum
-      - services/issue-service/go.sum
-      - services/project-service/go.sum
-      - services/worker-service/go.sum
+  key: go-modules
   paths:
     - .go/pkg/mod/
     - .go/cache/

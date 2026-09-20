@@ -21,11 +21,31 @@ func New(system *handler.SystemHandler, log *slog.Logger) http.Handler {
 
 	r.Route("/api/v1", func(api chi.Router) {
 		api.Get("/version", system.Version)
-		// proxy to internal services
-		api.Handle("/auth/*", handler.NewReverseProxy("http://auth-service:8081"))
-		api.Handle("/projects/*", handler.NewReverseProxy("http://project-service:8082"))
-		api.Handle("/issues/*", handler.NewReverseProxy("http://issue-service:8083"))
+
+		authProxy := proxyHandler("http://auth-service:8081")
+		api.Post("/auth/register", authProxy)
+		api.Post("/auth/login", authProxy)
+		api.Handle("/auth", authProxy)
+		api.Handle("/auth/*", authProxy)
+
+		projectProxy := proxyHandler("http://project-service:8082")
+		api.Get("/projects", projectProxy)
+		api.Post("/projects", projectProxy)
+		api.Get("/projects/{id}", projectProxy)
+		api.Post("/projects/members", projectProxy)
+		api.Handle("/projects", projectProxy)
+		api.Handle("/projects/*", projectProxy)
+
+		issueProxy := proxyHandler("http://issue-service:8083")
+		api.Post("/issues", issueProxy)
+		api.Handle("/issues", issueProxy)
+		api.Handle("/issues/*", issueProxy)
 	})
 
 	return r
+}
+
+func proxyHandler(target string) http.HandlerFunc {
+	handlerProxy := handler.NewReverseProxy(target)
+	return http.HandlerFunc(handlerProxy.ServeHTTP)
 }

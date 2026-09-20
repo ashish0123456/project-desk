@@ -51,12 +51,14 @@ Each business service owns its application logic, HTTP handlers, gRPC handlers, 
 ## Prerequisites
 
 - Docker Desktop with Docker Compose.
-- Go 1.25 or later for local Go development.
+- Go 1.26 or later for local Go development.
 - Buf and protobuf Go plugins only when regenerating gRPC code.
 
 ## Run With Docker Compose
 
 The root Compose file is the recommended entry point. It includes the complete deployment definition in `deployments/docker/docker-compose.yml`, so you do not need to start each service separately.
+
+For Oracle VM deployment through GitLab CI/CD, see [`deployments/README.md`](deployments/README.md). The production Compose definition is separate from the local development definition and pulls images from the GitLab Container Registry.
 
 From the repository root:
 

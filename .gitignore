@@ -1,4 +1,5 @@
 .env
+/deployments/docker/.env
 
 /bin
 /tmp

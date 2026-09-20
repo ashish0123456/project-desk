@@ -83,7 +83,9 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) Routes() http.Handler {
     mux := http.NewServeMux()
-    mux.HandleFunc("/register", h.Register)
-    mux.HandleFunc("/login", h.Login)
+    mux.HandleFunc("POST /register", h.Register)
+    mux.HandleFunc("POST /login", h.Login)
+    mux.HandleFunc("POST /auth/register", h.Register)
+    mux.HandleFunc("POST /auth/login", h.Login)
     return mux
 }

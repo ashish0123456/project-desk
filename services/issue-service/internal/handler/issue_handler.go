@@ -33,6 +33,6 @@ func (h *Handler) CreateIssue(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) Routes() http.Handler {
     mux := http.NewServeMux()
-    mux.HandleFunc("/issues", h.CreateIssue)
+    mux.HandleFunc("POST /issues", h.CreateIssue)
     return mux
 }

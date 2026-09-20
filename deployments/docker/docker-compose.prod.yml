@@ -1,0 +1,138 @@
+services:
+  postgres-auth:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: pm_auth
+    volumes:
+      - postgres_auth_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d pm_auth"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  postgres-project:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: pm_project
+    volumes:
+      - postgres_project_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d pm_project"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  postgres-issue:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: pm_issue
+    volumes:
+      - postgres_issue_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d pm_issue"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:8
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  api-gateway:
+    image: ${IMAGE_PREFIX}/api-gateway:${IMAGE_TAG}
+    ports:
+      - "${GATEWAY_PORT:-8080}:8080"
+    depends_on:
+      - auth-service
+      - project-service
+      - issue-service
+    environment:
+      APP_ENV: production
+      GATEWAY_PORT: 8080
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      VERSION: ${VERSION:-0.1.0}
+    restart: unless-stopped
+
+  auth-service:
+    image: ${IMAGE_PREFIX}/auth-service:${IMAGE_TAG}
+    depends_on:
+      postgres-auth:
+        condition: service_healthy
+    environment:
+      APP_ENV: production
+      AUTH_GRPC_PORT: 50051
+      AUTH_DB_HOST: postgres-auth
+      AUTH_DB_PORT: 5432
+      AUTH_DB_USER: ${POSTGRES_USER}
+      AUTH_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      AUTH_DB_NAME: pm_auth
+      AUTH_DB_SSLMODE: disable
+      AUTH_HTTP_PORT: 8081
+      AUTH_JWT_SECRET: ${AUTH_JWT_SECRET}
+    restart: unless-stopped
+
+  project-service:
+    image: ${IMAGE_PREFIX}/project-service:${IMAGE_TAG}
+    depends_on:
+      postgres-project:
+        condition: service_healthy
+    environment:
+      APP_ENV: production
+      PROJECT_GRPC_PORT: 50052
+      PROJECT_DB_HOST: postgres-project
+      PROJECT_DB_PORT: 5432
+      PROJECT_DB_USER: ${POSTGRES_USER}
+      PROJECT_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      PROJECT_DB_NAME: pm_project
+      PROJECT_DB_SSLMODE: disable
+      PROJECT_HTTP_PORT: 8082
+    restart: unless-stopped
+
+  issue-service:
+    image: ${IMAGE_PREFIX}/issue-service:${IMAGE_TAG}
+    depends_on:
+      postgres-issue:
+        condition: service_healthy
+    environment:
+      APP_ENV: production
+      ISSUE_GRPC_PORT: 50053
+      ISSUE_DB_HOST: postgres-issue
+      ISSUE_DB_PORT: 5432
+      ISSUE_DB_USER: ${POSTGRES_USER}
+      ISSUE_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      ISSUE_DB_NAME: pm_issue
+      ISSUE_DB_SSLMODE: disable
+      ISSUE_HTTP_PORT: 8083
+    restart: unless-stopped
+
+  worker-service:
+    image: ${IMAGE_PREFIX}/worker-service:${IMAGE_TAG}
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      APP_ENV: production
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      WORKER_COUNT: ${WORKER_COUNT:-5}
+      REDIS_ADDR: redis:6379
+    restart: unless-stopped
+
+volumes:
+  postgres_auth_data:
+  postgres_project_data:
+  postgres_issue_data:
